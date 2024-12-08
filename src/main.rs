@@ -1,7 +1,7 @@
 mod utils;
-mod day7;
+mod day8;
 
 fn main() {
-    println!("task1 result is {}", day7::task1());
-    println!("task2 result is {}", day7::task2());
+    println!("task1 result is {}", day8::task1());
+    //println!("task2 result is {}", day7::task2());
 }
