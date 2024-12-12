@@ -18,47 +18,37 @@ fn count_digits(number: usize) -> usize {
     digs
 }
 
-fn simulate_rock_rec(number: usize, generation: usize, to_gen: usize, res: &mut usize, map: &mut HashMap<(usize, usize), usize>) -> () {
+fn simulate_rock_rec(number: usize, generation: usize, to_gen: usize, memo: &mut HashMap<(usize, usize), usize>) -> usize {
     if generation == to_gen {
-        *res += 1;
-        return;
+        return 1;
     }
 
-    if map.contains_key(&(number, generation)) {
-        *res += map.get(&(number, generation)).unwrap();
-        return;
+    if let Some(&memoed) = memo.get(&(number, generation)) {
+        return memoed;
     }
 
     if number == 0 {
-        let mut curr_res = 0;
-        simulate_rock_rec(1, generation + 1, to_gen, &mut curr_res, map);
-        *res += curr_res;
-        map.insert((number, generation), curr_res);
-        return;
+        let curr_res = simulate_rock_rec(1, generation + 1, to_gen, memo);
+        memo.insert((number, generation), curr_res);
+        return curr_res;
     }
+
     let digs = count_digits(number);
     if digs % 2 == 0 {
         let (first, second) = split_number(number, digs);
-        let mut first_res = 0;
-        let mut second_res = 0;
-        simulate_rock_rec(first, generation + 1, to_gen, &mut first_res, map);
-        simulate_rock_rec(second, generation + 1, to_gen, &mut second_res, map);
-        map.insert((number, generation), first_res + second_res);
-        *res += first_res;
-        *res += second_res;
-        return;
+        let first_res = simulate_rock_rec(first, generation + 1, to_gen, memo);
+        let second_res = simulate_rock_rec(second, generation + 1, to_gen, memo);
+        memo.insert((number, generation), first_res + second_res);
+        return first_res + second_res;
     }
 
-    let mut _res = 0;
-    simulate_rock_rec(number * 2024, generation + 1, to_gen, &mut _res, map);
-    map.insert((number, generation), _res);
-    *res += _res;
+    let res = simulate_rock_rec(number * 2024, generation + 1, to_gen, memo);
+    memo.insert((number, generation), res);
+    return res;
 }
 
-fn simulate_rock(number: usize, map: &mut HashMap<(usize, usize), usize>, generation: usize) -> usize {
-    let mut result = 0;
-    simulate_rock_rec(number, 0, generation, &mut result, map);
-    result
+fn simulate_rock(number: usize, memo: &mut HashMap<(usize, usize), usize>, generation: usize) -> usize {
+    simulate_rock_rec(number, 0, generation, memo)
 }
 
 fn task(generations: usize) -> usize {
@@ -68,11 +58,11 @@ fn task(generations: usize) -> usize {
         .map(|x| x.parse::<usize>().unwrap())
         .collect::<Vec<_>>();
 
-    let mut map = HashMap::new();
+    let mut memo = HashMap::new();
 
     let mut result = 0;
     for num in &numbers {
-        result += simulate_rock(*num, &mut map, generations);
+        result += simulate_rock(*num, &mut memo, generations);
     }
     
     result
