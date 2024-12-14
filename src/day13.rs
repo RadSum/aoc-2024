@@ -1,11 +1,8 @@
 use std::fs;
-use num_rational::BigRational;
-use num_bigint::BigInt;
 
+const TASK2_OFFSET: isize = 10_000_000_000_000;
 
-const TASK2_OFFSET: usize = 10_000_000_000_000;
-
-fn parse_values(line: &str, res_delim: &str) -> (BigInt, BigInt) {
+fn parse_values(line: &str, res_delim: &str) -> (isize, isize) {
     let (x1, y1) = &line.split_once(": ").unwrap().1.split_once(", ").unwrap();
     let x1 = x1.split_once(res_delim).unwrap().1.parse().unwrap();
     let y1 = y1.split_once(res_delim).unwrap().1.parse().unwrap();
@@ -21,7 +18,7 @@ fn task(task2: bool) -> usize {
         .split("\n\n")
         .collect::<Vec<_>>();
 
-    let mut result: BigInt = 0.into();
+    let mut result = 0;
     for pa in &parsed {
         let lines = pa.split("\n").collect::<Vec<_>>();
         let (x1, y1) = parse_values(lines[0], "+");
@@ -33,23 +30,13 @@ fn task(task2: bool) -> usize {
             ry += TASK2_OFFSET;
         }
 
-        let equality_ratio = BigRational::new(-y2, x2.clone());
-        let new_x: BigRational = <BigInt as Into<BigRational>>::into(x1.clone()) * &equality_ratio + y1; 
-        let new_res: BigRational = <BigInt as Into<BigRational>>::into(rx.clone()) * equality_ratio + ry;
-
-        let res_x = new_res / new_x;
-        if !res_x.is_integer() {
-            continue;
+        // using cramer's rule to solve https://en.wikipedia.org/wiki/Cramer's_rule
+        if (y2 * rx - x2 * ry) % (y2 * x1 - x2 * y1) == 0 && (x1 * ry - y1 * rx) % (y2 * x1 - x2 * y1) == 0 {
+            result += 3 * ((y2 * rx - x2 * ry) / (y2 * x1 - x2 * y1)) + (x1 * ry - y1 * rx) / (y2 * x1 - x2 * y1);
         }
-
-        let res_y: BigRational = (<BigInt as Into<BigRational>>::into(rx) - <BigInt as Into<BigRational>>::into(x1) * &res_x) / x2;
-        if !res_y.is_integer() {
-            continue;
-        }
-        result += res_x.numer() * 3 + res_y.numer();
     }
 
-    result.try_into().unwrap()
+    result as usize
 }
 
 
